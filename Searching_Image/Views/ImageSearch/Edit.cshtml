@@ -1,0 +1,141 @@
+﻿@model Searching_Image.Models.UnsplashImage
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<a asp-action="Index" class="btn btn-success me-2">Back to Home</a>
+
+<div class="container my-4">
+    <h2 class="text-center mb-4">Image Details</h2>
+    <div class="text-center">
+        <section style="width: 1024px;">
+            <canvas id="canvas" width="600" height="600" style="border: 1px solid #000;">
+            </canvas>
+        </section>
+
+        <div class="mt-4">
+            <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-success me-2">Download Original</a>
+            <button onclick="clearCanvas()" class="btn btn-warning me-2">Clear All</button>
+            <!-- Download modified image -->
+            <button onclick="downloadImage()" class="btn btn-success me-2">Download Modified Image</button>
+        </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shape Selection Buttons -->
+<label for="colorPicker" class="me-2" style="float:left">Color:</label>
+<input type="color" id="SelectColor" value="#FF0000" class="form-control form-control-color me-3" style="float:left" title="Choose color" />
+
+<img src="~/images/react.png" onclick="init('FillRect')" alt="Rectangle" />
+<img src="~/images/circle.jpg" onclick="init('FillCircle')" alt="Circle" />
+<img src="~/images/font.jpg" onclick="init('DrawText')" alt="Text" />
+<input type="text" id="txtInput" placeholder="Enter text" />
+<img src="~/images/pencil.png" onclick="init('FreeDraw')" alt="Free Draw" />
+<img src="~/images/image icon.png" onclick="init('Images')" alt="Image" />
+
+<!-- Color and Text Input (for shape/text options) -->
+
+
+
+<script>
+    let canvas, ctx, newPaint = false, DrawingTypes = "", Colors = "", imageObj = new Image();
+    let drag = false, prevX = 0, currX = 0, prevY = 0, currY = 0;
+    let rect = { startX: 0, startY: 0, w: 0, h: 0 };
+
+    // Initialize Canvas and set drawing type
+    function init(drawType) {
+        newPaint = true;
+        canvas = document.getElementById("canvas");
+        DrawingTypes = drawType;
+        ctx = canvas.getContext("2d");
+
+       
+        if (drawType === 'Images') {
+            imageObj.src = "@Model.Urls.Regular"; 
+            imageObj.onload = function () {
+                ctx.drawImage(imageObj, 0, 0, 600, 600); 
+            };
+        }
+
+        canvas.addEventListener('mousedown', mouseDown, false);
+        canvas.addEventListener('mouseup', mouseUp, false);
+        canvas.addEventListener('mousemove', mouseMove, false);
+    }
+
+    // Mouse Events
+    function mouseDown(e) {
+        rect.startX = e.offsetX;
+        rect.startY = e.offsetY;
+        prevX = currX = e.offsetX;
+        prevY = currY = e.offsetY;
+        drag = true;
+    }
+
+    function mouseUp() {
+        drag = false;
+    }
+
+    function mouseMove(e) {
+        if (drag) {
+            currX = e.offsetX;
+            currY = e.offsetY;
+            draw();
+        }
+    }
+
+    // Draw shapes based on type selected
+    function draw() {
+        ctx.beginPath();
+        Colors = document.getElementById("SelectColor").value;
+        ctx.fillStyle = Colors;
+        ctx.strokeStyle = Colors;
+
+        switch (DrawingTypes) {
+            case "FillRect":
+                ctx.fillRect(rect.startX, rect.startY, currX - rect.startX, currY - rect.startY);
+                break;
+            case "FillCircle":
+                const radius = Math.sqrt(Math.pow(currX - rect.startX, 2) + Math.pow(currY - rect.startY, 2));
+                ctx.arc(rect.startX, rect.startY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                break;
+            case "Images":
+                ctx.drawImage(imageObj, rect.startX, rect.startY, currX - rect.startX, currY - rect.startY);
+                break;
+            case "DrawText":
+                ctx.font = '20px Arial';
+                ctx.fillText(document.getElementById('txtInput').value, rect.startX, rect.startY);
+                break;
+            case "FreeDraw":
+                ctx.moveTo(prevX, prevY);
+                ctx.lineTo(currX, currY);
+                ctx.strokeStyle = Colors;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                prevX = currX;
+                prevY = currY;
+                break;
+        }
+        ctx.closePath();
+    }
+
+    // Clear Canvas
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Download Modified Image
+    function downloadImage() {
+        const dataURL = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = dataURL;
+        downloadLink.download = "modified-image.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink); // Clean up
+    }
+</script>

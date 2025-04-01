@@ -1,0 +1,22 @@
+﻿@model Searching_Image.Models.UnsplashImage
+
+@{
+    ViewData["Title"] = "Details";
+}
+<a asp-action="Index" class="btn btn-success me-2">Back to Home</a>
+
+<div class="container my-4">
+    <h2 class="text-center mb-4">Image Details</h2>
+    <div class="text-center">
+        <img id="imagePreview" src="@Model.Urls.Regular" class="img-fluid" alt="@Model.Description ?? " Unsplash Image"" style="width: 600px; height: 600px; object-fit: cover;" />
+
+        <div class="mt-4">
+            <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary me-2">Download</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-success me-2">Edit</a>
+        </div>
+    </div>
+</div>
+
+
+
+
